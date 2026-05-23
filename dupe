@@ -1,0 +1,73 @@
+package net.example.dupe_mod;
+
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.item.ItemStack;
+import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+
+public class DupeMod implements ModInitializer {
+    @Override
+    public void onInitialize() {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(CommandManager.literal(".dupe")
+                .executes(context -> {
+                    ServerPlayerEntity player = context.getSource().getPlayer();
+                    if (player != null) {
+                        // Получаем предмет в левой руке
+                        ItemStack offHandStack = player.getOffHandStack();
+                        
+                        if (!offHandStack.isEmpty()) {
+                            // Создаем копию предмета
+                            ItemStack copiedStack = offHandStack.copy();
+                            // Устанавливаем такое же количество, как у оригинала
+                            copiedStack.setCount(offHandStack.getCount());
+                            
+                            // Добавляем копию в инвентарь игрока
+                            if (!player.giveItemStack(copiedStack)) {
+                                // Если не получилось добавить в инвентарь, выкидываем в мир
+                                player.dropItem(copiedStack, false);
+                            }
+                            
+                            player.sendMessage(Text.of("§aПредмет успешно размножен!"), false);
+                            return 1;
+                        } else {
+                            player.sendMessage(Text.of("§cВозьмите предмет в левую руку!"), false);
+                            return 0;
+                        }
+                    }
+                    return 0;
+                })
+            );
+        });
+    }
+}
+}
+  "schemaVersion": 1,
+  "id": "dupe_mod",
+  "version": "1.0.0",
+  "name": "Dupe Mod",
+  "description": "Мод для размножения предметов в левой руке",
+  "authors": [
+    "YourName"
+  ],
+  "contact": {
+    "homepage": "https://example.com/",
+    "sources": "https://github.com/yourname/dupe-mod"
+  },
+  "license": "MIT",
+  "icon": "assets/dupe_mod/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.example.dupe_mod.DupeMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "fabric": "*",
+    "minecraft": "1.20.x",
+    "java": ">=17"
+  }
+}
